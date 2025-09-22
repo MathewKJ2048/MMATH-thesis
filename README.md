@@ -6,6 +6,8 @@ LaTeX source files for MMATH Thesis at UWaterloo
 Run the following:
 
 ```
+git clone https://github.com/MathewKJ2048/MMATH-thesis
+cd ./MMATH-thesis/
 make
 ```
 
