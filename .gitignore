@@ -125,9 +125,15 @@ acs-*.bib
 *.slg
 *.slo
 *.sls
+*.pdf
+
+# for nomenclature and symbols
+*-glg
+*-glo
+*-gls
 
 # uncomment this for glossaries-extra (will ignore makeindex's style files!)
-# *.ist
+*.ist
 
 # gnuplot
 *.gnuplot

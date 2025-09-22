@@ -1,0 +1,107 @@
+# Makefile for LaTeX document compilation
+
+# Document name (without .tex extension)
+DOCUMENT = uw-ethesis
+
+# Compiler
+LATEX = pdflatex
+BIBTEX = bibtex
+MAKEINDEX = makeindex
+
+# File extensions
+TEX_EXT = .tex
+PDF_EXT = .pdf
+AUX_EXT = .aux
+LOG_EXT = .log
+TOC_EXT = .toc
+LOT_EXT = .lot
+LOF_EXT = .lof
+BLG_EXT = .blg
+BBL_EXT = .bbl
+IDX_EXT = .idx
+IND_EXT = .ind
+ILG_EXT = .ilg
+OUT_EXT = .out
+NAV_EXT = .nav
+SNM_EXT = .snm
+GLS_EXT = .gls
+GLO_EXT = .glo
+IST_EXT = .ist
+
+# All artefact files to be cleaned
+ARTEFACTS = \
+    $(AUX_EXT) \
+    $(LOG_EXT) \
+    $(TOC_EXT) \
+    $(LOT_EXT) \
+    $(LOF_EXT) \
+    $(BLG_EXT) \
+    $(BBL_EXT) \
+    $(IDX_EXT) \
+    $(IND_EXT) \
+    $(ILG_EXT) \
+    $(OUT_EXT) \
+    $(NAV_EXT) \
+    $(SNM_EXT) \
+    $(GLS_EXT) \
+    $(GLO_EXT) \
+    $(IST_EXT) \
+    .bcf .run.xml .synctex.gz .fls .fdb_latexmk
+
+# Default target
+all: $(DOCUMENT)$(PDF_EXT)
+
+# Main PDF generation rule
+$(DOCUMENT)$(PDF_EXT): $(DOCUMENT)$(TEX_EXT)
+	@echo "=== First pass of $(LATEX) ==="
+	$(LATEX) $(DOCUMENT)
+	@echo ""
+	
+	@if grep -q "citation" $(DOCUMENT)$(AUX_EXT); then \
+		echo "=== Running $(BIBTEX) ==="; \
+		$(BIBTEX) $(DOCUMENT); \
+		echo ""; \
+	fi
+	
+	@if [ -f $(DOCUMENT)$(IDX_EXT) ]; then \
+		echo "=== Running $(MAKEINDEX) ==="; \
+		$(MAKEINDEX) $(DOCUMENT); \
+		echo ""; \
+	fi
+	
+	@echo "=== Second pass of $(LATEX) ==="
+	$(LATEX) $(DOCUMENT)
+	@echo ""
+	
+	@echo "=== Third pass of $(LATEX) ==="
+	$(LATEX) $(DOCUMENT)
+	@echo ""
+	
+	@echo "Compilation complete: $(DOCUMENT)$(PDF_EXT)"
+
+
+# Clean up all generated files except PDF
+clean:
+	@echo "Cleaning up artefacts..."
+	@for ext in $(ARTEFACTS); do \
+		if [ -f "$(DOCUMENT)$$ext" ]; then \
+			rm -v "$(DOCUMENT)$$ext"; \
+		fi; \
+	done
+
+# Clean everything including PDF
+distclean: clean
+	@if [ -f "$(DOCUMENT)$(PDF_EXT)" ]; then \
+		rm -v "$(DOCUMENT)$(PDF_EXT)"; \
+	fi
+
+
+# Help message
+help:
+	@echo "Available targets:"
+	@echo "  all        - Compile document with bibliography and index (default)"
+	@echo "  clean      - Remove all intermediate files"
+	@echo "  distclean  - Remove all generated files including PDF"
+	@echo "  help       - Show this help message"
+
+.PHONY: all clean distclean help

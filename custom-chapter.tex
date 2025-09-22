@@ -1,0 +1,32 @@
+%======================================================================
+\chapter{Custom}
+%======================================================================
+
+The evaluation of the translator is broadly divided into three sections: Correctness, performance of the model, and performance of the translator.
+
+The translator produces a tla+ file from a .dsh file, which can be analyzed statically for complexity metrics, such as the number of lines of code. This can be compared to the number of lines required for a manual translation for specific models, to observe how efficient the translator is at capturing the semantics of the model.
+
+Through the analysis of simple models, certain optimization techniques are revealed and implemented, in an iterative process. However, a weakness of such a system is over-fitting to certain kinds of models, whereby optimizing for small, hand-written models may have undesirable effects on the efficiency of other types of models.
+
+The correctness of the translation is a binary correct/not-correct. Since the space of all possible models cannot be reasoned about, a determination of correctness is made via:
+
+\begin{itemize}
+\item custom unit tests of known models
+\item fuzz-testing using randomly generated models
+\end{itemize}
+
+To check for specific instances, a pair (model, instance) is preprocessed into model', which is a model that tests specifically for that instance. Model' is translated and tested for the only property present.
+
+TODO: find an analogue
+
+The following metrics are used to judge the performance of the model:
+
+\begin{itemize}
+	\item time taken to execute, as compared to the time on the Analyzer
+	\item clock cycles to execute (usually tightly correlated with time)
+	\item trace lengths generated during execution
+	\item state space of the translated model, in comparison to the original model in the Analyzer
+\end{itemize}
+
+
+TODO: formalize the notion of specific model types in terms, and discuss how the performance is affected
