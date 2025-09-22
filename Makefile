@@ -24,9 +24,19 @@ ILG_EXT = .ilg
 OUT_EXT = .out
 NAV_EXT = .nav
 SNM_EXT = .snm
+GLG_EXT = .glg
 GLS_EXT = .gls
 GLO_EXT = .glo
 IST_EXT = .ist
+GLG_EXT_NOM = .nomenclature-glg
+GLS_EXT_NOM = .nomenclature-gls
+GLO_EXT_NOM = .nomenclature-glo
+GLG_EXT_SYM = .symbols-glg
+GLS_EXT_SYM = .symbols-gls
+GLO_EXT_SYM = .symbols-glo
+GLG_EXT_ABR = .glg-abr
+GLS_EXT_ABR = .gls-abr
+GLO_EXT_ABR = .glo-abr
 
 # All artefact files to be cleaned
 ARTEFACTS = \
@@ -45,7 +55,17 @@ ARTEFACTS = \
     $(SNM_EXT) \
     $(GLS_EXT) \
     $(GLO_EXT) \
-    $(IST_EXT) \
+	$(GLG_EXT) \
+	$(IST_EXT) \
+    $(GLO_EXT_NOM) \
+	$(GLG_EXT_NOM) \
+	$(GLS_EXT_NOM) \
+    $(GLO_EXT_SYM) \
+	$(GLG_EXT_SYM) \
+    $(GLS_EXT_SYM) \
+	$(GLO_EXT_ABR) \
+	$(GLG_EXT_ABR) \
+    $(GLS_EXT_ABR) \
     .bcf .run.xml .synctex.gz .fls .fdb_latexmk
 
 # Default target
