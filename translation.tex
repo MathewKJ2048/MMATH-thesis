@@ -8,9 +8,18 @@
 \section{Translating Dash+ elements to TLA+}
 %----------------------------------------------------------------------
 
+A Dash+ model is written with Alloy expressions and code embedded inside Dash structures. The Dash structures are used to model a transition system. Since TLA+ supports transitions natively, the dash elements are translated directly to TLA+, without an intermediate Alloy step.
+
+
 %----------------------------------------------------------------------
 \subsection{States}
 %----------------------------------------------------------------------
+
+Each state is associated with a unique string in TLA+. The uniqueness of this string is guaranteed by using the fully qualified name of the state. No two states in a Dash model can have the same fully qualified name, so turning the fully qualified name into a string preserves uniqueness. These strings are associated with formulae in TLA+, and all further references to the state is made via the formula, rather than the string.
+
+The set of all states and the set of all default states are assigned their own formulae, which are used later in the translation. The current state is modelled as a TLA+ VARIABLE, whose type depends on the Dash model. In the general case, the type is a set. For Dash models without concurrency, where the system cannot be in multiple states simultaneously, the type of the state VARIABLE is a string.
+
+TODO: find out embedding code snippets and give examples
 
 %----------------------------------------------------------------------
 \subsection{Transitions}
