@@ -22,20 +22,43 @@ The set of all states and the set of all default states are assigned their own f
 TODO: find out embedding code snippets and give examples
 
 %----------------------------------------------------------------------
+\subsection{Events}
+%----------------------------------------------------------------------
+
+This doesn't have an implementation yet, all examples are hand-translated as of now.
+
+%----------------------------------------------------------------------
 \subsection{Transitions}
 %----------------------------------------------------------------------
+
+Transitions are modelled as boolean formulae in TLA+. In Dash, the transitions are defined inside the state from which the transitions is taken. In the translation, all transitions are defined at the top-level. Each transition has the following:
+
+\begin{itemize}
+	\item (implicit) - the 'from' state, translated as state = \{from state\}
+	\item goto - the 'to' state, translated as state' = \{to state\}
+	\item when - the guard, translated as an Alloy expression
+	\item do - the action, translated as an Alloy expression
+	\item on - the triggering event
+	\item (emitting event - todo: fill this up post discussion)
+\end{itemize}
 
 %----------------------------------------------------------------------
 \subsection{Actions}
 %----------------------------------------------------------------------
 
+Alloy
+
 %----------------------------------------------------------------------
 \subsection{Guards}
 %----------------------------------------------------------------------
 
+Alloy
+
 %----------------------------------------------------------------------
 \subsection{Concurrency}
 %----------------------------------------------------------------------
+
+todo: discuss
 
 %----------------------------------------------------------------------
 \section{Translating Alloy elements to TLA+}
