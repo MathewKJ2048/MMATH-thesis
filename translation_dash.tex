@@ -1,18 +1,14 @@
 %======================================================================
-\chapter{Translation}
+\chapter{Translating Dash+ elements to TLA+}
 %======================================================================
-
-
-
-%----------------------------------------------------------------------
-\section{Translating Dash+ elements to TLA+}
-%----------------------------------------------------------------------
 
 A Dash+ model is written with Alloy expressions and code embedded inside Dash structures. The Dash structures are used to model a transition system. Since TLA+ supports transitions natively, the dash elements are translated directly to TLA+, without an intermediate Alloy step.
 
 
+
+
 %----------------------------------------------------------------------
-\subsection{States}
+\section{States}
 %----------------------------------------------------------------------
 
 Each state is associated with a unique string in TLA+. The uniqueness of this string is guaranteed by using the fully qualified name of the state. No two states in a Dash model can have the same fully qualified name, so turning the fully qualified name into a string preserves uniqueness. These strings are associated with formulae in TLA+, and all further references to the state is made via the formula, rather than the string.
@@ -21,14 +17,18 @@ The set of all states and the set of all default states are assigned their own f
 
 TODO: find out embedding code snippets and give examples
 
+TODO: explain state hierarchies here.
+
 %----------------------------------------------------------------------
-\subsection{Events}
+\section{Events}
 %----------------------------------------------------------------------
 
 This doesn't have an implementation yet, all examples are hand-translated as of now.
 
+TODO: explain big-step small-step semantics
+
 %----------------------------------------------------------------------
-\subsection{Transitions}
+\section{Transitions}
 %----------------------------------------------------------------------
 
 Transitions are modelled as boolean formulae in TLA+. In Dash, the transitions are defined inside the state from which the transitions is taken. In the translation, all transitions are defined at the top-level. Each transition has the following:
@@ -43,55 +43,15 @@ Transitions are modelled as boolean formulae in TLA+. In Dash, the transitions a
 \end{itemize}
 
 %----------------------------------------------------------------------
-\subsection{Actions}
+\section{Actions}
 %----------------------------------------------------------------------
 
 Alloy
 
 %----------------------------------------------------------------------
-\subsection{Guards}
+\section{Guards}
 %----------------------------------------------------------------------
 
 Alloy
 
-%----------------------------------------------------------------------
-\subsection{Concurrency}
-%----------------------------------------------------------------------
 
-todo: discuss
-
-%----------------------------------------------------------------------
-\section{Translating Alloy elements to TLA+}
-%----------------------------------------------------------------------
-
-%----------------------------------------------------------------------
-\subsection{Signatures}
-%----------------------------------------------------------------------
-
-
-%----------------------------------------------------------------------
-\subsection{Fields}
-%----------------------------------------------------------------------
-
-%----------------------------------------------------------------------
-\subsection{Multiplicities}
-%----------------------------------------------------------------------
-
-Explain the four multiplicities with two basic types, the use of quantifiers over cardinality as optimizations and set comprehension based composition
-
-%----------------------------------------------------------------------
-\subsection{Predicates}
-%----------------------------------------------------------------------
-
-%----------------------------------------------------------------------
-\subsection{Facts}
-%----------------------------------------------------------------------
-
-%----------------------------------------------------------------------
-\subsection{Commands}
-%----------------------------------------------------------------------
-
-
-%----------------------------------------------------------------------
-\section{Translating LTL properties to TLA+ invariants}
-%----------------------------------------------------------------------
