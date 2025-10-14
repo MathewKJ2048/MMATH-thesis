@@ -125,7 +125,7 @@ acs-*.bib
 *.slg
 *.slo
 *.sls
-*.pdf
+# *.pdf
 
 # for nomenclature and symbols
 *-glg
