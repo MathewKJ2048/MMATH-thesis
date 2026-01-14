@@ -2,17 +2,253 @@
 \chapter{Translating Alloy elements to TLA+}
 %======================================================================
 
+Consider the following snippet of Alloy code:
 
+\begin{lstlisting}
+	sig B
+	{
+
+	}
+	sig A
+	{
+		f : set B
+	}
+\end{lstlisting}
+
+Signatures are modelled as sets, whose elements are defined in the .cfg file. The symbols used for the sets are shared by the .tla and .cfg files. 
+
+The above code is translated into the following code in TLA+
+
+\begin{verbatim}
+	VARIABLES A, B, f
+
+	Init == /\ A \in SUBSET A_set
+			/\ B \in SUBSET B_set
+			/\ f \in SUBSET (A_set \X B_set)
+
+	Next == UNCHANGED <<A, B, f>>
+\end{verbatim}
+
+The A, B and f are variables whose value is determined by the TLC model checker in the Init step, with no changes occurring afterwards. Once a valid configuration is determined, the Next relation does not change the variables. TLC explores all possible initial configurations.
 
 %----------------------------------------------------------------------
 \section{Signatures}
 %----------------------------------------------------------------------
 
-Signatures are modelled as sets, explain in greater detail with example code for a simple signature
+Signatures can have the following modifiers applied to them:
+
+\begin{itemize}
+	\item subtyping
+	\item multiplicity
+	\item abstraction
+	\item inheritance
+	\item enumeration
+	
+\end{itemize}
+
+\subsubsection{Subtyping}
+
+\begin{verbatim}
+	sig A {}
+	sig B in A {}
+	sig C extends A {}
+	sig D extends A {}
+\end{verbatim}
+
+In the example above, "in" represents inclusive subtyping - every atom of A may be an atom of B, and every atom of B is an atom of A. Meanwhile, "extends" functions similarly to "in", with the added constraint an atom of A can be either an atom of C or an atom of D or neither. An atom of A cannot be both an atom of C and an atom of D.
+
+Analysis of the signature hierarchy shows that A is the base signature, thus the atoms are explicitly defined for A in the .cfg file.
+
+
+
+\begin{verbatim}
+	// in the .cfg file
+	A_set == {"a0","a1","a2"} // the default size of a signature is 3
+	
+\end{verbatim}
+
+\begin{verbatim}
+	// in the .tla file
+	VARIABLES A, B, C, D
+
+	TypeOK == /\ A \in SUBSET A_set
+			/\ B \in SUBSET A_set
+			/\ C \in SUBSET A_set
+			/\ D \in SUBSET A_set
+
+	sig_hierarchy ==
+	/\ B \subseteq A
+	/\ C \subseteq A
+	/\ D \subseteq A
+	/\ C \intersection D = {}
+
+	Init == TypeOK /\ sig_hierarchy
+	Next == UNCHANGED <<A, B, C, D>>
+	
+\end{verbatim}
+
+The use of the + operator enables inclusive subtyping from multiple parents. The translation reuses the general logic for inclusive subtyping.
+
+\begin{verbatim}
+	sig X {}
+	sig Y {}
+	sig Z in X + Y {}
+\end{verbatim}
+
+\begin{verbatim}
+	sig_hierarchy ==
+	/\ Z \subseteq X \union Y
+	/\ C \subseteq A
+	/\ D \subseteq A
+	// X \intersection Y = {} is not specified explicitly because this is implicitly true from the definition of X_set and Y_set in the .cfg (MKJ: maybe this deserves mention earlier? sigs are disjoint by default in Alloy, so the .cfg file uses the formula <sig-name><number> for atoms. This means the disjointedness is implicit in the translation, since sigs can't have the same name)
+\end{verbatim}
+
+
+
+\subsubsection{Multiplicity}
+
+The multiplicities applied to signatures are:
+
+\begin{itemize}
+	\item none
+	\item lone
+	\item one
+	\item some
+\end{itemize}
+
+The translation of these multiplicities follow the scheme described in the Fields subsection.
+
+\subsubsection{Abstraction}
+
+When a signature is made abstract, all its atoms belong to extensions. In the TLA translation, the sets associated with abstract signatures are defined in the .cfg file with explicit atoms, but the variable associated with them is subject to the constraint of being an empty set.
+
+\subsubsection{Enumeration}
+
+Enumeration fixes the possible values of the signature and orders them. Enums are logically equivalent to creating an abstract sig, with several one-sigs extending the abstract sig. The translation method for enums reuses the methods for one-sigs and abstract sigs.
+
+
+\begin{verbatim}
+	enum X {A, B, C}
+\end{verbatim}
+
+is equivalent to
+
+\begin{verbatim}
+	abstract sig X {}
+	one sig A, B, C extends X {}
+\end{verbatim}
+
+In addition, enums include an implicit import of the ordering module.
+
 
 %----------------------------------------------------------------------
 \subsection{Fields}
 %----------------------------------------------------------------------
+
+In addition to the default "set" multiplicity, fields have the following multiplicities:
+
+\begin{itemize}
+	\item none
+	\item lone
+	\item one
+	\item some
+\end{itemize}
+
+There are two possible translation schema for these multiplicities - using set comprehension, and using the inbuilt "Cardinality" function. Though the latter is more straightforward, the use of Cardinality is costlier than set comprehension in terms of computation time for running the models.
+
+\begin{verbatim}
+	sig B
+	{
+
+	}
+	sig A
+	{
+		f : one B
+	}
+\end{verbatim}
+
+\begin{verbatim}
+	// using set comprehension
+	multiplicity_constraint == 
+	/\ \E x \in f : TRUE
+	/\ \A x \in f : \A y \in f : x = y
+
+	// using cardinality
+	multiplicity_constraint ==
+	/\ Cardinality(f) = 1
+\end{verbatim}
+
+The general translation of multiplicities using set comprehensions can be constructed from two elementary predicates, which are then composed to form the TLA+ translations of multiplicities:
+
+\begin{verbatim}
+	// S is a binary relation
+	no_elements(S) == // needs correct expression with testing
+	more_than_one_element(S) == // needs correct expression with testing
+\end{verbatim}
+
+\begin{verbatim}
+	sig B
+	{
+
+	}
+	sig A
+	{
+		f : one B
+		g : some B
+		h : set B
+		i : none B
+		j : lone B
+	}
+\end{verbatim}
+
+\begin{verbatim}
+	multiplicity_constraint == 
+	/\ ~no_elements(f) /\ ~more_than_one_element(f)
+	/\ ~no_elements(g)
+	/\ TRUE // no constraints on h
+	/\ no_elements(i)
+	/\ ~more_than_one_element(j)
+\end{verbatim}
+
+In addition to the basic multiplicities, the modifier "disj" can be applied
+
+\subsubsection{Multi-relations}
+
+Multi-relations consist of the following form of relations:
+
+\begin{verbatim}
+	sig A {}
+	sig B {}
+	sig C{
+		f : A -> B
+	}
+\end{verbatim}
+
+Alloy supports multi-arity fields, though fields with an arity of more than 3 are discouraged (reference - Alloy read-the-docs). 
+
+In both TLA+ and Alloy, cartesian products of sets are flat, i.e. A x B x C is a set containing tuples of the form (a,b,c). The translator constructs such sets when translating multi-relations from Alloy.
+
+\begin{verbatim}
+	sig A {}
+	sig B {}
+	sig C {
+		f : set A -> set B
+	}
+\end{verbatim}
+
+\begin{verbatim}
+	VARIABLES A, B, C, f
+
+	Init == /\ A \in SUBSET A_set
+			/\ B \in SUBSET B_set
+			/\ C \in SUBSET C_set
+			/\ f \in SUBSET (C_set \X A_set \X B_set)
+
+	Next == UNCHANGED <<A, B, C, f>>
+\end{verbatim}
+
+The logic used to translate multiplicities is applied as before. Certain combinations of multiplicities which result in unsatisfiable models in the original Alloy code, will result in translations which produce an error when run in TLC.
+
 
 %----------------------------------------------------------------------
 \subsection{Multiplicities}
@@ -20,9 +256,33 @@ Signatures are modelled as sets, explain in greater detail with example code for
 
 Explain the four multiplicities with two basic types, the use of quantifiers over cardinality as optimizations and set comprehension.
 
+This section needs to be folded into previous sections since multiplicities apply to fields and signatures, and is context-dependent elsewhere.
+
 %----------------------------------------------------------------------
 \section{Expressions/Formulae}
 %----------------------------------------------------------------------
+
+a, b and c are n-ary relations, f is a functional relation, r, r1 and r2 are binary relations, s is a set, e1 and e2 are expressions
+
+\begin{tabular}{ c | c | l }
+	\hline			
+	Alloy & TLA+ & Comments \\
+	\hline
+	b[a] & tla & box join \\
+	a.b & tla & dot join \\
+	a -> b & tla & cartesian product \\
+	s <: a & tla & domain restriction \\
+	s :> a & tla & range restriction \\
+	a \& b & tla & intersection \\
+	r1 ++ r2 & tla & relational override \\
+	\#a & Cardinality\(a\) & cardinality \\
+	a + b & a \\union b & union \\
+	a - b & tla & difference \\
+	= & = & equality (= has another meaning as well in context) \\
+
+
+	\hline  
+\end{tabular}
 
 %----------------------------------------------------------------------
 \section{Facts}

@@ -11,21 +11,66 @@ A Dash+ model is written with Alloy expressions and code embedded inside Dash st
 \section{States}
 %----------------------------------------------------------------------
 
-Each state is associated with a unique string in TLA+. The uniqueness of this string is guaranteed by using the fully qualified name of the state. No two states in a Dash model can have the same fully qualified name, so turning the fully qualified name into a string preserves uniqueness. These strings are associated with formulae in TLA+, and all further references to the state is made via the formula, rather than the string.
 
-The set of all states and the set of all default states are assigned their own formulae, which are used later in the translation. The current state is modelled as a TLA+ VARIABLE, whose type depends on the Dash model. In the general case, the type is a set. For Dash models without concurrency, where the system cannot be in multiple states simultaneously, the type of the state VARIABLE is a string.
+There are three types of states in Dash:
 
-TODO: find out embedding code snippets and give examples
+\begin{itemize}
+	\item Leaf states
+	\item OR states
+	\item AND states
+\end{itemize}
 
-TODO: explain state hierarchies here.
+Consider a simple Dash model:
 
-%----------------------------------------------------------------------
-\section{Events}
-%----------------------------------------------------------------------
+\begin{verbatim}
+state root
+{
+	default state s1 {
 
-This doesn't have an implementation yet, all examples are hand-translated as of now.
+	}
+	state s2 {
 
-TODO: explain big-step small-step semantics
+	}
+}
+\end{verbatim}
+
+In this model, "root" is an OR state, while "s1" and "s2" are leaf states. During translation, every state is associated with a TLA definition, consisting of a set of strings. Each leaf-state is associated with a singleton set consisting of a string derived from the fully qualified name of the leaf-state, while non-leaf states are associated with sets made from the union of the sets associated with the leaf states that compose the non-leaf states.
+
+\begin{verbatim}
+	_root_s1 == {"root/s1"}
+	_root_s1 == {"root/s2"}
+	_root == _root_s1 \union _root_s2
+\end{verbatim}
+
+Since TLA+ requires that a definition exists before it is used, the translator sorts the states in such a manner that a state is translated only after all the child states of that state is translated. Since the fully qualified names of a state is unique, no two states will be translated to TLA+ definitions of the same name.
+
+\begin{verbatim}
+	VARIABLES _conf
+
+	_all_conf == _root_s1
+	_TypeOK == (_conf \subseteq _all_conf)
+
+	_Init == _TypeOK /\ (_conf = _root_s1)
+\end{verbatim}
+
+The "\_conf" variable in TLA+ contains the set of all states that the model is in, at a particular snapshot. The initial value is determined by the following algorithm:
+
+\begin{itemize}
+	\item Let $f(S)$ be the set of leaf states to be in, when starting at $S$ as the root state. $f(root)$ is the initial value of \_conf, where $root$ is the root state of the model.
+	\item $f(S)= S$ if $S$ is itself a leaf state, with no children
+	\item $f(S) = C_d$ if $S$ is an OR state, where $C_d$ is the default child state of $S$
+	\item $f(S) = \bigcup_{i=1}^{n} f(C_i)$ if $S$ is an AND state
+\end{itemize}
+
+"\_all\_conf" is a standard definition, of a set that contains the string associated with every single leaf state. Since all leaf states are descendants of the root state, "\_all\_conf" is the same as the definition of the root state. "\_all\_conf" is used to define the type of "\_conf" in the TypeOK relation.
+
+
+
+
+A possible alternate choice for such a translation involves the use of string literals for all states (leaf and non-leaf), with transitions written in such a way that the value of conf is always legal within the state hierarchy of the model. In such a scenario, the state of the model can be determined using only the set membership operator. The number of states that TLC needs to explore is a function of the semantics of the input model, and unaffected by the choice of representation of the states.
+
+However, the amount of memory required to represent a particular configuration in the original scheme is less than or equal to the amount of memory needed to represent that configuration in the alternate scheme. All leaf states contribute a string literal to the conf set in both schemes, while non-leaf states contribute a string literal only in the alternate scheme. Since the memory used is lesser in the original scheme, we chose to base the translator design on it, instead of on the alternate scheme.
+
 
 %----------------------------------------------------------------------
 \section{Transitions}
@@ -34,24 +79,313 @@ TODO: explain big-step small-step semantics
 Transitions are modelled as boolean formulae in TLA+. In Dash, the transitions are defined inside the state from which the transitions is taken. In the translation, all transitions are defined at the top-level. Each transition has the following:
 
 \begin{itemize}
-	\item (implicit) - the 'from' state, translated as state = \{from state\}
-	\item goto - the 'to' state, translated as state' = \{to state\}
+	\item (implicit) - the 'from' state
+	\item goto - the 'to' state
 	\item when - the guard, translated as an Alloy expression
 	\item do - the action, translated as an Alloy expression
 	\item on - the triggering event
 	\item (emitting event - todo: fill this up post discussion)
 \end{itemize}
 
+Consider a simple Dash model:
+
+\begin{verbatim}
+state root
+{
+	default state s1 {
+
+	}
+	trans t1
+	{
+		from s1
+		goto root
+	}
+}
+\end{verbatim}
+
+This is translated into TLA+ as:
+
+\begin{verbatim}
+	VARIABLES _trans_taken
+
+	_taken_root_t1 == "root/t1"
+	_none_transition == "[none]"
+
+	_pre_root_t1 == ((_conf \intersect [root/s1]) /= {})
+	_post_root_t1 == (_trans_taken' = _taken_root_t1) /\ (_conf' = ((_conf \ {root/s1}) \union {root/s1}))
+	_root_t1 == _pre_root_t1 /\ _post_root_t1
+
+	_some_transition == _pre_root_t
+	_some_pre_transition == _root_t
+\end{verbatim}
+
+Each transition is translated into the following elements:
+
+\begin{itemize}
+	\item \_taken\_[transition-name]
+	\item \_pre\_[transition-name]
+	\item \_post\_[transition-name]
+	\item \_enabled\_[transition-name]
+	\item \_[transition-name]
+\end{itemize}
+
+The transition is translated into a formula named after the fully qualified name of the transition, and is split into a pre-condition and a post-condition. The pre-conditions are used in \_some\_pre\_transition, which is the disjunction of all the preconditions, used to test if any transition is enabled.
+
+\subsection{Transition Taken}
+
+The \_taken\_[transition-name] refers to a definition of a string that represents the transition, obtained from the fully qualified name of the transition. The fully qualified name depends on the location of definition of the transition in the model, and is unique to the transition. 
+
+When the transition is taken, the \_trans\_taken variable takes on the value of the string defined by \_taken\_[transition-name]. This does not affect the result obtained after running TLC on the translated model, and serves primarily as an aid to analyze traces produced by TLC. Since no transition is taken until the \_Next formula is true, the initial value of the \_trans\_taken variable is \_none\_transition, which defines a standard string that represents no transition.
+
+\begin{verbatim}
+
+	VARIABLES _trans_taken
+
+	_taken_root_t == "root/t"
+	_none_transition == "[none]"
+
+	_all_trans_taken == {_taken_root_t,_none_transition}
+	_TypeOK == (_trans_taken \in _all_trans_taken)
+
+	_Init == _TypeOK /\ (_trans_taken = _none_transition)
+
+\end{verbatim}
+
+\subsection{Stability}
+
+(Assumption: Big step and small step semantics explained in background)
+
+Each snapshot is either stable or unstable, marking the start and end of a big step. The stability of the current snapshot is required to define the preconditions of transitions, while the postconditions determine the stability of the following snapshot. This is tracked using a boolean variable called \_stable.
+
+\begin{verbatim}
+
+	VARIABLES _stable
+
+	_TypeOK == (_stable \in BOOLEAN)
+
+	_Init == (_stable = TRUE)
+
+\end{verbatim}
+
+\subsection{Scopes}
+
+Assumption: the term "scope" is explained in background
+
+The scopes used up to the current snapshot is tracked using the \_scopes\_used variable. This variable has the same type as the \_conf variable, since there is a one-one correspondence between the set of scopes and the set of transitions. The \_scopes\_used variable is used when defining the preconditions to ensure that within a big step, only transitions in orthogonal scopes are taken. The value of the variable in the next snapshot is defined in the postconditions of the transitions.
+
+\begin{verbatim}
+
+	VARIABLES _scopes_used
+
+	_all_scopes_used == _all_conf
+	
+	_TypeOK == (_scopes_used \subseteq _all_scopes_used)
+
+	_Init == _TypeOK /\ (_scopes_used = {})
+
+\end{verbatim}
+
+\subsection{Stability after the transition}
+
+To check whether a transition will be enabled for a given value of \_scopes\_used, a parameterized formula is associated with each transition, called \_enabled\_[transition-name]. When the next snapshot is stable, none of the transitions are enabled, which is represented by the \_next\_is\_stable formula. This is defined as the conjunction of the negations of the \_enabled\_[transition-name] formulae associated with each transition.
+
+\begin{verbatim}
+
+	_enabled_root_t(_arg_scopes_used) == // insert logic here
+
+	// arguments change to include events later
+
+	_next_is_stable(_arg_scopes_used) == ~(_enabled_root_t(_arg_scopes_used))
+
+\end{verbatim}
+
+
+\subsection{Stutter and small step}
+
+A small step consists of the disjunction of all the transition formula, along with a stutter formula, where none of the variables change. Assumption: TLA+'s approach to stutter is explained, as is the separate mechanism to track inherent stutter in TLA+ vs explicit stutter. A stutter happens only when no other transitions are possible, which is determined using the \_next\_is\_stable formula.
+
+\begin{verbatim}
+
+	_some_transition == _pre_root_t
+	_some_pre_transition == _pre_root_t
+	_stutter == (_trans_taken' = _none_transition) /\ UNCHANGED <<_conf,_stable,_scopes_used>>
+	_small_step == _some_transition \/ (_stutter /\ (~_some_pre_transition))
+
+\end{verbatim}
+
+
+Putting it all together, for a basic model with simple transitions and states, we have:
+
+\begin{verbatim}
+
+VARIABLES _trans_taken, _conf, _scopes_used, _stable
+
+\* State literals, represented as sets of strings. Leaf-states become strings and non-leaf states are composed of their descendants
+_root_s2 == {"root/s2"}
+_root_s1 == {"root/s1"}
+_root == _root_s1 \union _root_s2
+
+\* string literal representations of transitions taken, which are the values taken by the _events variable
+
+\* string literal representations of transitions taken, which are the values taken by the _trans_taken variable
+_taken_root_t == "root/t"
+_none_transition == "[none]"
+
+\* parameterized formulae to check if transitions are enabled
+_enabled_root_t(_arg_scopes_used) == TRUE
+
+\* negation of disjunction of enabled-formulae
+_next_is_stable(_arg_scopes_used) == ~(_enabled_root_t(_arg_scopes_used))
+
+\* Translation of transition root/t
+_pre_root_t == ((_conf \intersect [root/s1, root/s2]) /= {})
+_post_root_t == (_trans_taken' = _taken_root_t) /\ (_conf' = ((_conf \ {root/s1,root/s2}) \union {root/s1,root/s2})) /\ UNCHANGED <<_scopes_used>> /\ UNCHANGED <<_stable>>
+_root_t == _pre_root_t /\ _post_root_t
+
+\* Small step definition
+_some_transition == _pre_root_t
+_some_pre_transition == _pre_root_t
+_stutter == (_trans_taken' = _none_transition) /\ UNCHANGED <<_conf,_stable,_scopes_used>>
+_small_step == _some_transition \/ (_stutter /\ (~_some_pre_transition))
+
+\* type restrictions on variables
+_all_conf == _root_s1 \union _root_s2
+_all_trans_taken == {_taken_root_t,_none_transition}
+_all_scopes_used == _all_conf
+_TypeOK == (_conf \subseteq _all_conf) /\ (_stable \in BOOLEAN) /\ (_scopes_used \subseteq _all_scopes_used) /\ (_trans_taken \in _all_trans_taken)
+
+\* initial values for variables
+_Init == _TypeOK /\ (_conf = {}) /\ (_stable = TRUE) /\ (_scopes_used = {}) /\ (_trans_taken = _none_transition)
+
+\* Next relation
+_Next == _TypeOK /\ _small_step
+====
+
+\end{verbatim}
+
+
+%----------------------------------------------------------------------
+\section{Events}
+%----------------------------------------------------------------------
+
+This is a draft subject to rewrites:
+
+This list is an outline of what to explain:
+
+\begin{itemize}
+	\item The events variable
+	\item mapping the events to string forumale
+	\item standard formulae for the set of internal events and the set of env events
+	\item the use of filters using set intersection, to refer to internal events and environmental events in the transitions
+	\item The policy used to clear the active events after big steps
+	\item The mechanism used to prevent runaway cascades of repeated small steps taken endlessly
+	\item non-determinism of which small step is taken in the event of multiple possible ones, though this is to be done in the background, and referred to here
+\end{itemize}
+
+
+
+
 %----------------------------------------------------------------------
 \section{Actions}
 %----------------------------------------------------------------------
 
-Alloy
+Actions are translated from Alloy, and form boolean expressions which are integrated into the transition postconditions.
 
 %----------------------------------------------------------------------
 \section{Guards}
 %----------------------------------------------------------------------
 
-Alloy
+Actions are translated from Alloy, and form boolean expressions which are integrated into the transition preconditions.
+
+%----------------------------------------------------------------------
+\section{Notes (Ignore)}
+%----------------------------------------------------------------------
+
+
+fundamental features of dash:
+
+description of a state hierarchy
+description of transitions
+initial constraints
+
+States:
+control states
+OR states
+AND states
+
+OR and AND states have multiple child states
+in an OR state, the system is in one or more of its child states
+
+question: is it exclusive? no
+paper clearly says one or more
+
+priority is given for transitions that leave the parent state over those that leave the child state
+
+what does this mean? if there is one transition that leaves to a different control state, what then?
+
+AND state - in all of them, and their sub-states are independent
+
+questions: AND state out of date, how t deal with citations for new stuff?
+
+
+- conc 
+
+question: enforcing the addition of multiple states or inference from just the leaf states
+
+
+transition templates and add-ons - punt
+
+
+
+A model - is it the description, or the series of snapshots?
+
+Transitions take the model from one snapshot to the next
+
+is there a canonical order to snapshots?
+
+
+stable snapshot - no enabled transitions
+enabled transition - one which has met guards and Events
+
+unstable snapshot - not stable
+
+big step - list of transitions from one stable snapshot to the next
+small step - a single transition from an unstable snapshot
+big step is also a list of small steps
+
+Big step maximality: at most one transition per concurrent state
+
+question: if big step maximality is enabled, is there a guarantee that all big-steps will be of finite length?
+
+CONCURRENCY: says that a small step is a single transition
+
+
+EVENT Lifeline: 
+events last till the next big-step
+
+variable lifeline:
+variable changes are allowed to cascade through small steps
+
+priority of transitions: leaving parent has priority over leaving child
+
+question: can this affect which transitions are taken at all? yes, cancelling
+
+Frame problem:
+what si the equivalent in TLA+
+
+non-determinism: same env input given in a big step can result in different ending snapshots
+
+priority consistency
+
+proving all of this formally
+
+
+
+meta-question: does all this need full explanation
+
+
+IMPORTANT: if nothing mentioned variable unchanged
+
+
 
 
