@@ -4,56 +4,177 @@
 
 A Dash+ model is written with Alloy expressions and code embedded inside Dash structures. The Dash structures are used to model a transition system. Since TLA+ supports transitions natively, the dash elements are translated directly to TLA+, without an intermediate Alloy step.
 
+Consider the following Dash model:
 
+\begin{verbatim}
+state root
+{
+	env event ee {}
+	event ei {}
+	default state s1{
+		conc a {
+			default state s1a1 {}
+			state s1a2 {}
+		}
+		conc b {
+			default state s1b1 {}
+			state s1b2 {}
+		}
+	}
+	state s2 {
+		conc p {}
+		conc q {}
+	}
+	trans t1 {
+		from s1
+		goto s2
+	}
+	trans t2 {
+		on ee
+		from s1a1
+		goto s1b2
+		send ei
+	}
+	trans t3 {
+		from s1
+		goto s1b1
+	}
+	trans t4 {
+		from s1
+		goto s1a1
+	}
+	trans t5 {
+		from s1
+		goto s1a2
+	}
+}
+\end{verbatim}
 
-
-%----------------------------------------------------------------------
-\section{States}
-%----------------------------------------------------------------------
-
-
-There are three types of states in Dash:
+This model is used to demonstrate the translation of following features of Dash:
 
 \begin{itemize}
-	\item Leaf states
-	\item OR states
-	\item AND states
+	\item State hierarchies
+	\item Transitions
+	\item Concurrency
+	\item Big-step small-step semantics
+	\item Internal and Environmental Events
 \end{itemize}
 
-Consider a simple Dash model:
+
+
+%----------------------------------------------------------------------
+\section{State Hierarchy}
+%----------------------------------------------------------------------
+
+
+The Dash model shown above has the following state hierarchy:
 
 \begin{verbatim}
 state root
 {
 	default state s1 {
-
+		conc a {
+			default state s1a1 {}
+			state s1a2 {}
+		}
+		conc b {
+			default state s1b1 {}
+			state s1b2 {}
+		}
 	}
 	state s2 {
-
+		conc p {}
+		conc q {}
 	}
 }
 \end{verbatim}
 
-In this model, "root" is an OR state, while "s1" and "s2" are leaf states. During translation, every state is associated with a TLA definition, consisting of a set of strings. Each leaf-state is associated with a singleton set consisting of a string derived from the fully qualified name of the leaf-state, while non-leaf states are associated with sets made from the union of the sets associated with the leaf states that compose the non-leaf states.
+There are three types of states in Dash:
+
+\begin{itemize}
+	\item Leaf states (s1a1, s1a2, s1b1, s1b2, p, q)
+	\item OR states (root, a, b)
+	\item AND states (s2, s1)
+\end{itemize}
+
+ During translation, every state is associated with a TLA definition, consisting of a set of strings. Each leaf-state is associated with a singleton set consisting of a string derived from the fully qualified name of the leaf-state, while non-leaf states are associated with sets made from the union of the sets associated with the leaf states that compose the non-leaf states.
 
 \begin{verbatim}
-	_root_s1 == {"root/s1"}
-	_root_s1 == {"root/s2"}
-	_root == _root_s1 \union _root_s2
+_root_s1_b_s1b1 == {"root/s1/b/s1b1"}
+_root_s1_b_s1b2 == {"root/s1/b/s1b2"}
+_root_s1_a_s1a2 == {"root/s1/a/s1a2"}
+_root_s1_a_s1a1 == {"root/s1/a/s1a1"}
+_root_s2_q == {"root/s2/q"}
+_root_s1_b == _root_s1_b_s1b1 \union _root_s1_b_s1b2
+_root_s2_p == {"root/s2/p"}
+_root_s1_a == _root_s1_a_s1a1 \union _root_s1_a_s1a2
+_root_s2 == _root_s2_p \union _root_s2_q
+_root_s1 == _root_s1_a \union _root_s1_b
+_root == _root_s1 \union _root_s2
 \end{verbatim}
 
 Since TLA+ requires that a definition exists before it is used, the translator sorts the states in such a manner that a state is translated only after all the child states of that state is translated. Since the fully qualified names of a state is unique, no two states will be translated to TLA+ definitions of the same name.
 
+\section{Dash variables}
+
+The following variables are present in the .tla translation:
+
+\begin{itemize}
+	\item \_conf - this is a set of leaf state strings, representing the states that a snapshot is in
+	\item \_trans\_taken - this is a string that holds the name of the transition taken to arrive at the current snapshot
+	\item \_stable - this is a boolean value that is TRUE iff the current snapshot is stable
+	\item \_scopes\_used - this is a set of leaf state strings, representing the scopes used in the current big step
+	\item \_events - this is a set of events (represented as strings) that are active in the current snapshot
+\end{itemize}
+
 \begin{verbatim}
-	VARIABLES _conf
+VARIABLES _trans_taken, _conf, _scopes_used, _stable, _events
 
-	_all_conf == _root_s1
-	_TypeOK == (_conf \subseteq _all_conf)
+\* string literal representations of transitions taken, which are the values taken by the _events variable
+_root_ei == "root/ei"
+_root_ee == "root/ee"
+_environmental_events == {_root_ee}
+_internal_events == {_root_ei}
 
-	_Init == _TypeOK /\ (_conf = _root_s1)
+\* string literal representations of transitions taken, which are the values taken by the _trans_taken variable
+_taken_root_t2 == "root/t2"
+_taken_root_t1 == "root/t1"
+_taken_root_t4 == "root/t4"
+_taken_root_t3 == "root/t3"
+_taken_root_t5 == "root/t5"
+_none_transition == "[none]"
+
+\* state constraints
+_valid_conf(arg) == arg \in _root_s2_p \union _root_s2_q \union _root_s1_a_s1a1 \union _root_s1_a_s1a2 \union _root_s1_b_s1b2 \union _root_s1_b_s1b1
+_valid_trans_taken(arg) == arg \in {_taken_root_t2,_taken_root_t1,_taken_root_t4,_taken_root_t3,_taken_root_t5,_none_transition}
+_valid_scopes_used(arg) == _valid_conf(arg)
+_valid_stable(arg) == arg \in BOOLEAN
+_valid_events(arg) == arg \in SUBSET (_environmental_events \union _internal_events)
+
+_valid_unprimed == _valid_conf(_conf) /\ _valid_trans_taken(_trans_taken) /\ _valid_scopes_used(_scopes_used) /\ _valid_stable(_stable) /\ _valid_events(_events)
+
+_valid_primed == _valid_conf(_conf') /\ _valid_trans_taken(_trans_taken') /\ _valid_scopes_used(_scopes_used') /\ _valid_stable(_stable') /\ _valid_events(_events')
+
+_Init == _valid_unprimed
+/\ _conf = _root_s1_a_s1a1 \union _root_s1_b_s1b1 
+/\ _stable = TRUE 
+/\ _scopes_used = {} 
+/\ _trans_taken = _none_transition 
+/\ _events \intersection _internal_events = {}
+
+_Next == _valid_primed /\ _small_step
+
 \end{verbatim}
 
-The "\_conf" variable in TLA+ contains the set of all states that the model is in, at a particular snapshot. The initial value is determined by the following algorithm:
+Each transition and event has a formula with its fully qualified name as a string, which is used to assign values to \_trans\_taken and \_events, respectively. In addition to existing transitions, there is a default "[none]" string to represent stutter steps, where no transitions are taken. The use of square brackets prevent naming clashes with other transition names.
+
+Since TLA+ requires that any formula involving a primed variable v start with a clause either of the form $v' \in exp$ or $v' = exp$, the formula \_valid\_primed is the first clause of \_Next. This allows a separation between the parts of the translation concerned with restricting the variables to valid values (\_valid\_primed), and the part of the translation that concerned with ensuring the variables values are correct (\_small\_step).
+
+This is a departure from the translation to Alloy, and is required since TLA+ explores the set of all possible values for a variable. Without a validity constraint, the state space becomes infinite, and TLC cannot be run on the translation.
+
+Since the first snapshot has no prior transition, the value assigned to \_trans\_taken in \_Init is \_none\_transition. Since the first snapshot is always stable, the value assigned to \_stable is TRUE, and to \_scopes\_used is the null set. Since internal events are generated by transitions, and no transition has been taken yet, there is a clause that states that no internal events are present in \_events.
+
+The initial value of \_conf is determined by the following algorithm, executed during the translation.
 
 \begin{itemize}
 	\item Let $f(S)$ be the set of leaf states to be in, when starting at $S$ as the root state. $f(root)$ is the initial value of \_conf, where $root$ is the root state of the model.
@@ -62,14 +183,10 @@ The "\_conf" variable in TLA+ contains the set of all states that the model is i
 	\item $f(S) = \bigcup_{i=1}^{n} f(C_i)$ if $S$ is an AND state
 \end{itemize}
 
-"\_all\_conf" is a standard definition, of a set that contains the string associated with every single leaf state. Since all leaf states are descendants of the root state, "\_all\_conf" is the same as the definition of the root state. "\_all\_conf" is used to define the type of "\_conf" in the TypeOK relation.
-
-
-
-
 A possible alternate choice for such a translation involves the use of string literals for all states (leaf and non-leaf), with transitions written in such a way that the value of conf is always legal within the state hierarchy of the model. In such a scenario, the state of the model can be determined using only the set membership operator. The number of states that TLC needs to explore is a function of the semantics of the input model, and unaffected by the choice of representation of the states.
 
 However, the amount of memory required to represent a particular configuration in the original scheme is less than or equal to the amount of memory needed to represent that configuration in the alternate scheme. All leaf states contribute a string literal to the conf set in both schemes, while non-leaf states contribute a string literal only in the alternate scheme. Since the memory used is lesser in the original scheme, we chose to base the translator design on it, instead of on the alternate scheme.
+
 
 
 %----------------------------------------------------------------------
