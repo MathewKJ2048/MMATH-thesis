@@ -15,7 +15,7 @@ Consider an Alloy model M, with a command C, of the form run/check P for scope s
   \item No Counterexample found - this occurs when C is a check command, and every instance I which satisfies the constraints of M, also satisfies the constraints of P. This includes the case where the constraints of just M are unsatisfiable. 
 \end{itemize}
 
-The goal of a translation to TLA+ is that when the translated model is run using TLC, the output produced by TLC can be used to infer the output the Analyzer would have produced, had the original model been run on the Analyzer. A translation is correct, if and only if the Analyzer's outputs correspond to the outputs produced by TLC.
+The goal of a translation to TLA+ is that when the translated model is run using TLC, the output produced by TLC can be used to infer the output the Analyzer would have produced, had the original model been run on the Analyzer. A translation is correct, if and only if the Analyzer's outputs correspond to the outputs produced by TLC. A translation is efficient, if the time taken to run a translated model using TLC is lower than the time taken to run the original model using the Analyzer.
 
 
 
@@ -23,8 +23,64 @@ The goal of a translation to TLA+ is that when the translated model is run using
 \section{TLC's behavior}
 %----------------------------------------------------------------------
 
+The following is a guess at the model-checking algorithm used by TLC, presented at a high level of abstraction. Since the translator targets TLC, the translator is designed under the assumption that translated model is subject to an algorithm similar to the one presented below:
+
+\begin{algorithm}
+\caption{Model-checking with TLC}
+
+\begin{algorithmic}[1]
+
+\STATE $all\_states \gets \{\}$
+\STATE $state\_queue \gets []$
+
+\FOR{$s$ in $\{ s : init\_mc(s) \}$}
+    \IF{$init\_lc(s)$}
+        \IF{\NOT $inv(s)$}
+            \STATE exit("invariant violation")
+        \ENDIF
+        \STATE $all\_states.add(s)$
+        \STATE $state\_queue.push(s)$
+        \STATE $write(s)$
+    \ENDIF
+\ENDFOR
+
+\IF{$state\_queue = []$}
+    \STATE exit("No Init states found")
+\ENDIF
+
+\WHILE{$state\_queue \neq []$}
+    \STATE $s \gets state\_queue.pop()$
+    \STATE $CS\_nexts \gets Next\_MC(s)$
+    \STATE $flag \gets false$
+
+    \FOR{$s'$ in $CS\_nexts$}
+        \IF{$Next\_LC(s,s')$}
+            \IF{\NOT $s'$ in $all\_states$}
+                \IF{\NOT $inv(s')$}
+                    \STATE exit("invariant violation")
+                \ELSE
+                    \STATE $all\_states.push(s')$
+                    \STATE $state\_queue.push(s')$
+                    \STATE $write(s')$
+                \ENDIF
+            \ENDIF
+            \STATE $flag \gets true$
+        \ENDIF
+    \ENDFOR
+
+    \IF{\NOT $flag$ \AND $EXIT\_ON\_DEADLOCK$}
+        \STATE exit("deadlock detected")
+    \ENDIF
+\ENDWHILE
+
+\STATE exit("success")
+
+
+\end{algorithmic}
+\end{algorithm}
+
 %----------------------------------------------------------------------
-\section{TLC's behavior}
+\section{Translation schemes}
 %----------------------------------------------------------------------
 
 
