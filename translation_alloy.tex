@@ -1,6 +1,32 @@
 %======================================================================
-\chapter{Translating Alloy elements to TLA+}
+\chapter{Translating Alloy to TLA+}
 %======================================================================
+
+%----------------------------------------------------------------------
+\section{Problem Description}
+%----------------------------------------------------------------------
+
+Consider an Alloy model M, with a command C, of the form run/check P for scope s. When fed into the Analyzer, there are 4 possible outcomes:
+
+\begin{itemize}
+  \item Instance found - this occurs when C is a run command, and the constraints of M and P are satisfied by an instance I, which is shown by the Analyzer.
+  \item No Instances found - this occurs when when C is a run command, and there is no instance I capable of satisfying the constraints of M and P. This includes the case where the constraints of just M are unsatisfiable. 
+  \item Counterexample found - this occurs when C is a check command, and there is an instance I which satisfies the constraints of M, and violates the constraints of P.
+  \item No Counterexample found - this occurs when C is a check command, and every instance I which satisfies the constraints of M, also satisfies the constraints of P. This includes the case where the constraints of just M are unsatisfiable. 
+\end{itemize}
+
+The goal of a translation to TLA+ is that when the translated model is run using TLC, the output produced by TLC can be used to infer the output the Analyzer would have produced, had the original model been run on the Analyzer. A translation is correct, if and only if the Analyzer's outputs correspond to the outputs produced by TLC.
+
+
+
+%----------------------------------------------------------------------
+\section{TLC's behavior}
+%----------------------------------------------------------------------
+
+%----------------------------------------------------------------------
+\section{TLC's behavior}
+%----------------------------------------------------------------------
+
 
 Consider the following snippet of Alloy code:
 
