@@ -1,0 +1,79 @@
+
+
+The following is a guess at the model-checking algorithm used by TLC, presented at a high level of abstraction. Since the translator targets TLC, the translator is designed under the assumption that translated model is subject to an algorithm similar to the one presented below:
+
+\begin{itemize}
+  \item all\_states - this is a hash table that stores a collection of states. There are two operations performed - adding a state to the table, and looking a state up on the table to see if it already exists.
+  \item state\_queue - this is a queue that stores a collection of states. There are three operations performed - pushing a state to the tail of the queue, popping a state from the head of the queue, and looking up the length of the queue.
+  \item Init\_MC - this a function that returns all the states that satisfy the membership constraints of the Init formula.
+  \item Init\_LC(s) - this a function that returns true iff the state s satisfies the logical constraints of the Init formula.
+  \item Next\_MC(s) - this a function that returns all the states that satisfy the membership constraints of the Next formula, where the unprimed variables belong to s, and the primed variables belong to the states in the returned set.
+  \item Next\_LC(s,s') - this is a function that returns true iff the states s and s' satisfy the logical constraints of the Next formula, where the primed variables belong to s' and the unprimed variables belong to s.
+  \item exit() - this represents a termination of the algorithm.
+  \item Inv(s) - this is a function that returns true iff s satisfies every invariant in the TLA specification.
+  \item write(s) - this represents writing the state s into the system's memory, which persists after running TLC.
+  \item EXIT\_ON\_DEADLOCK - this represents a flag set when TLC is run, specifying how to behave if TLC detects a deadlock - i.e. a state from which no transitions can be taken.
+  \item
+
+The algorithm has two phases - in the first phase, TLC computes all valid initial states, and writes them to memory. In the second phase, TLC uses the initial states to generate and check more states, by taking valid transitions. The algorithm terminates when no more unseen states remain.
+
+
+\end{itemize}
+
+
+\begin{algorithm}
+\caption{Model-checking with TLC}
+
+\begin{algorithmic}[1]
+
+\STATE $all\_states \gets \{\}$
+\STATE $state\_queue \gets []$
+
+
+
+\FOR{$s$ in $Init\_MC() $}
+    \IF{$Init\_LC(s)$}
+        \IF{\NOT $Inv(s)$}
+            \STATE exit("invariant violation")
+        \ENDIF
+        \STATE $all\_states.add(s)$
+        \STATE $state\_queue.push(s)$
+        \STATE $write(s)$
+    \ENDIF
+\ENDFOR
+
+
+
+\WHILE{$state\_queue \neq []$} 
+    \STATE $s \gets state\_queue.pop()$
+    \STATE $S\_nexts \gets Next\_MC(s)$
+    \STATE $SOME\_NEXT\_STATE \gets false$
+
+    \FOR{$s'$ in $S\_nexts$}
+        \IF{$Next\_LC(s,s')$}
+            \IF{\NOT $s'$ in $all\_states$}
+                \IF{\NOT $inv(s')$}
+					\STATE $write(s')$
+                    \STATE exit("invariant violation")
+                \ELSE
+                    \STATE $all\_states.add(s')$
+                    \STATE $state\_queue.push(s')$
+                    \STATE $write(s')$
+                \ENDIF
+            \ENDIF
+            \STATE $SOME\_NEXT\_STATE \gets true$
+        \ENDIF
+    \ENDFOR
+
+    \IF{\NOT $SOME\_NEXT\_STATE$ \AND $EXIT\_ON\_DEADLOCK$}
+        \STATE exit("deadlock detected")
+    \ENDIF
+\ENDWHILE
+
+\STATE exit("success")
+
+
+\end{algorithmic}
+\end{algorithm}
+
+Since the process of checking whether some state s in in all\_states is done via comparing the hashes, the is a small probability that TLC did not explore all possible states. This probability is reported upon a successful exit.

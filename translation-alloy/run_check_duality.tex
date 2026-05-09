@@ -1,0 +1,37 @@
+Consider a model M with a command C, where C is of the form check P for scope s. Consider C', which is of the form run ~P for scope s. 
+
+Claim: C and C' produce the same set of instances.
+
+Proof:
+
+Sub-claim: any instance produced by C is also produced by C'
+
+\begin{itemize}
+  \item Let I be an instance of the model, produced by C.
+  \item Since C is a check command, I satisfies M, but not P.
+  \item Since I does not satisfy P, I satisfies ~P.
+  \item Since I satisfies ~P and M, I is produced by run ~P (which is what C' is)
+  \item Thus, any instance produced by C is also produced by C'
+\end{itemize}
+
+Sub-claim: any instance produced by C' is also produced by C
+
+\begin{itemize}
+  \item Let I be an instance of the model, produced by C'.
+  \item Since C is a run command, I satisfies M and ~P.
+  \item Since I satisfies ~P, I does not satisfy P.
+  \item Since I does not satisfy P but satisfies M, I is produced by check P (which is what C is)
+  \item Thus, any instance produced by C' is also produced by C
+\end{itemize}
+
+Final proof:
+
+\begin{itemize}
+  \item Let S be the set of all instances produced by C, and S' be the set of all instances produced by C'
+  \item The claim is that S = S'
+  \item From the first result, S is a subset of S'
+  \item From the second result, S' is a subset of S
+  \item Since S and S' are subsets of each other, they are the same set
+\end{itemize}
+
+This means that before translation, any command can be turned into an equivalent run command, or an equivalent check command, by inverting the property P within that command. Thus, a translation scheme that supports either run commands or check commands, is sufficient to support both types of commands.
