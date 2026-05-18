@@ -1,4 +1,4 @@
-Consider the following generic Alloy model:
+Consider the following generic Alloy model M:
 
 
 \begin{lstlisting}
@@ -6,8 +6,50 @@ Consider the following generic Alloy model:
 	{
 		f : A
 	}
-	fact mc
+	fact R
 	{
-		
+		// fact body
 	}
+	pred P 
+	{
+		// predicate body
+	}
+
+	// command C - run P
+	// scope s - 2 A
+	run P for 2 A
+
 \end{lstlisting}
+
+The core of the model M is translated as follows:
+
+\begin{lstlisting}
+	VARIABLES A, f
+
+	R == <fact body>
+
+	Init == 
+		(A = {}
+		A = {"A0"}
+		\/ A = {"A0","A1"})
+		/\ f \in SUBSET (A \X A)
+		/\ R
+
+	Next == UNCHANGED <<A,f>>
+
+\end{lstlisting}
+
+\begin{itemize}
+	\item Every signature and field becomes a variable
+	\item The constraints of the model are translated to appear in the Init formula
+	\item The scope of the command is used to determine the allowed values for scope variables
+	\item The allowed values for fields are defined in terms of the signatures that the field contains
+	\item The Next formula plays no role
+\end{itemize}
+
+When TLC is run on this spec, every possible instance of the Alloy model becomes a valid initial state explored by TLC. To translate the command C, there are two possibilities:
+
+\begin{lstlisting}
+
+\end{lstlisting}
+
