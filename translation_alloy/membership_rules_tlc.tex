@@ -1,0 +1,34 @@
+When a TLA+ spec is written and run on TLC, there are certain rules that the formulae are required to follow. Consider a simple TLA+ model with a single variable V:
+
+\begin{lstlisting}
+	VARIABLE V
+
+	Init == MC(V) /\ LC(V)
+	Next == MC_prime(V',V) /\ LC_prime(V,V')
+
+\end{lstlisting}
+
+$MC(V)$ must specify a finite set of values that V can take, without references to V'. $MC(V)$ can take three basic forms:
+
+\begin{itemize}
+	\item $V = E$
+	\item $V \\in E$
+	\item $MCA(V) \\/ MCB(V)$
+\end{itemize}
+
+where E is an arbitrary expression, and MCA and MCB follow the same rules as MC.
+
+$MC_prime(V',V)$ is subject to similar rules, taking four basic forms:
+
+\begin{itemize}
+	\item $V' = E(V)$
+	\item $V' \\in E(V)$
+	\item $UNCHANGED V$
+	\item $MCA_prime(V',V) \\/ MCB_prime(V',V)$
+\end{itemize}
+
+where $E(V)$ is an expression which may depend on $V$, and $MCA_prime$ and $MCB_prime$ follow the same rules as $MC_prime$. $UNCHANGED V$ is equivalent to $V' = V$, which is a special case of the first form.
+
+$LC(V)$ is an expression that depends only on the unprimed $V$ (with no reference to $V'$), while $LC'(V,V')$ is an expression that can depend on both $V$ or $V'$ or both.
+
+Any translation scheme must produce an output .tla file that satisfies these rules, before TLC can be used.
