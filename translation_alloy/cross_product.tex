@@ -26,4 +26,24 @@ _cross(A,B) == A \o B
 f \in _cross(A,_cross(B,C))
 \end{lstlisting}
 
-With this representation, the associativity of the macro is irrelevant, since the end result is the same whether the application is left or right associative. This matches the semantics of the Cartesian product in Alloy
+With this representation, the associativity of the macro is irrelevant, since the end result is the same whether the application is left or right associative. This matches the semantics of the Cartesian product in Alloy.
+
+As a consequence, the representation of signatures changes, from sets of strings, to sets of tuples of arity one (or lists of length 1). This is necessary, since TLA+ does not allow dynamic type-checking to determine whether a macro is applied on a string or a tuple. By representing signatures as tuples/lists, a single macro covers all the cases where a cross product is applied:
+
+\begin{itemize}
+	\item signature cross signature
+	\item signature cross field
+	\item field cross signature
+	\item field cross field
+\end{itemize}
+
+\begin{lstlisting}
+sig B, C {}
+\end{lstlisting}
+
+is translated as:
+
+\begin{lstlisting}
+B \in {<<"B0">>,<<"B1">>,<<"B2">>}
+/\ C \in {<<"C0">>,<<"C1">>,<<"C2">>}
+\end{lstlisting}
