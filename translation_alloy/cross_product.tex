@@ -1,0 +1,29 @@
+Consider a simple field, as shown below:
+
+\begin{lstlisting}
+sig B, C {}
+sig A {
+	f : set B set -> set C
+}
+\end{lstlisting}
+
+The field f is an element of $A \cross B \cross C$. In Alloy, Cartesian products are flat; $(A \cross B) \cross C$ is the same as $A \cross (B \cross C)$, which is also the same as $A \cross B \cross C$. In TLA+, Cartesian products are nested; $(A \cross B) \cross C$, $A \cross (B \cross C)$ and $A \cross B \cross C$ are distinct from each other, where $A \cross B \cross C$ corresponds to the flat product.
+
+A simple implementation of a translation for Cartesian products is to use $A \cross B \cross C$ in TLA+, by avoiding the use of brackets in the produced TLA+ code. However, this results in the following issues:
+
+\begin{itemize}
+	\item When translating an expression like $P x (B x C + A x D)$, eliminating the brackets requires the translator to remake the whole expression by applying the distribution rule to get $P x B x C + P x A x D$. When predicates are introduced, this approach becomes intractable.
+	\item When translating an expression of like $(A x B)$, if the arity of A and B are not one, using the Cartesian product operator results in a non-flat set. The translator must compute the arity of A and B in the translation stage, and extract the inner components before applying the Cartesian product operator. 
+\end{itemize}
+
+An alternative method to represent Cartesian products exploits the fact that in TLA+, a tuple is treated the same as a list. Using this fact, a macro for Cartesian products that treats tuples as lists, is used in place of the Alloy Cartesian product operator.
+
+The above model is translated as:
+
+\begin{lstlisting}
+_cross(A,B) == A \o B
+\\ A and B are lists, which are concatenated
+f \in _cross(A,_cross(B,C))
+\end{lstlisting}
+
+With this representation, the associativity of the macro is irrelevant, since the end result is the same whether the application is left or right associative. This matches the semantics of the Cartesian product in Alloy
