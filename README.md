@@ -1,6 +1,16 @@
 # MMATH-thesis
 LaTeX source files for MMATH Thesis at UWaterloo
 
+## Links:
+
+https://lamport.azurewebsites.net/pubs/yuanyu-model-checking.pdf
+
+Section 4 describes the TLC algorithm, and needs to be cited
+
+Yuan Yu, anagiotis Manolios, and Leslie Lamport, CHARME ,99
+
+This description may be outdated
+
 # Build instructions:
 
 Run the following:
