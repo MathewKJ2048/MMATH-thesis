@@ -1,0 +1,91 @@
+% alloy.tex --- Alloy language definition for listings -*-latex-*-
+
+% Copyright (C) 2018 Nancy Day <nday@uwaterloo.ca>
+% Copyright (C) 2018 Jose Serna <jserna@uwaterloo.ca>
+% Copyright (C) 2018, 2020 Amin Bandali <bandali@uwaterloo.ca>
+
+
+
+\usepackage[formats]{listings}
+% Define Language
+\lstdefinelanguage{alloy}
+{
+	% list of keywords
+	morekeywords={
+        abstract,
+        all,
+        and,
+        as,
+        assert,
+        but,
+        check,
+        disj,
+        else,
+        enum,
+        exactly,
+        extends,
+        fact,
+        for,
+        fun,
+        iden,
+        iff,
+        implies,
+        in,
+        Int,
+        let,
+        lone,
+        module,
+        no,
+        none,
+        not,
+        one,
+        open,
+        or,
+        pred,
+        private,
+        run,
+        set,
+        seq,
+        sig,
+        some,
+        sum,
+        univ
+	},
+	sensitive=true, % keywords are case-sensitive
+	morecomment=[l]{//}, % l is for line comment
+	morecomment=[l]{--}, % l is for line comment
+	morecomment=[s]{/*}{*/}, % s is for start and end delimiter
+	morestring=[b]" % defines that strings are enclosed in double quotes
+}
+
+
+
+% Set Language
+\lstdefinestyle{alloy}{
+	language={alloy},
+	basicstyle=\footnotesize\ttfamily, % Global Code Style
+	captionpos=b, % Position of the Caption (t for top, b for bottom)
+	extendedchars=true, % Allows 256 instead of 128 ASCII characters
+	tabsize=2, % number of spaces indented when discovering a tab 
+	columns=flexible, % make all characters equal width
+	keepspaces=true, % does not ignore spaces to fit width, convert tabs to spaces
+	showstringspaces=false, % lets spaces in strings appear as real spaces
+	breaklines=true, % wrap lines if they don't fit
+	%frame=trbl, % draw a frame at the top, right, left and bottom of the listing
+	%frameround=tttt, % make the frame round at all four corners
+	framesep=4pt, % quarter circle size of the round corners
+	numbers=left, % show line numbers at the left
+  numberstyle=\footnotesize\ttfamily, % style of the line numbers
+	commentstyle=\color{eclipseGreen}, % style of comments
+	keywordstyle=\bfseries\color{calloy}, % style of keywords
+	stringstyle=\color{eclipseBlue}, % style of strings
+	xleftmargin=0.8cm,
+	escapeinside={\%*}{*)}          % if you want to add LaTeX within your code
+}
+
+\newcommand{\alloycode}[1]{\lstinline[style=alloy, basicstyle=\ttfamily]{#1}}
+
+
+%% Local Variables:
+%% tex-main-file: "../bandali-mmath-thesis.tex"
+%% End:
