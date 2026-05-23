@@ -7,13 +7,13 @@ sig A {
 }
 \end{lstlisting}
 
-The field f is an element of $A \cross B \cross C$. In Alloy, Cartesian products are flat; $(A \cross B) \cross C$ is the same as $A \cross (B \cross C)$, which is also the same as $A \cross B \cross C$. In TLA+, Cartesian products are nested; $(A \cross B) \cross C$, $A \cross (B \cross C)$ and $A \cross B \cross C$ are distinct from each other, where $A \cross B \cross C$ corresponds to the flat product.
+The field f is an element of $A \times B \times C$. In Alloy, Cartesian products are flat; $(A \times B) \times C$ is the same as $A \times (B \times C)$, which is also the same as $A \times B \times C$. In TLA+, Cartesian products are nested; $(A \times B) \times C$, $A \times (B \times C)$ and $A \times B \times C$ are distinct from each other, where $A \times B \times C$ corresponds to the flat product.
 
-A simple implementation of a translation for Cartesian products is to use $A \cross B \cross C$ in TLA+, by avoiding the use of brackets in the produced TLA+ code. However, this results in the following issues:
+A simple implementation of a translation for Cartesian products is to use $A \times B \times C$ in TLA+, by avoiding the use of brackets in the produced TLA+ code. However, this results in the following issues:
 
 \begin{itemize}
-	\item When translating an expression like $P x (B x C + A x D)$, eliminating the brackets requires the translator to remake the whole expression by applying the distribution rule to get $P x B x C + P x A x D$. When predicates are introduced, this approach becomes intractable.
-	\item When translating an expression of like $(A x B)$, if the arity of A and B are not one, using the Cartesian product operator results in a non-flat set. The translator must compute the arity of A and B in the translation stage, and extract the inner components before applying the Cartesian product operator. 
+	\item When translating an expression like $P \times (B \times C + A \times D)$, eliminating the brackets requires the translator to remake the whole expression by applying the distribution rule to get $P \times B \times C + P \times A \times D$. When predicates are introduced, this approach becomes intractable.
+	\item When translating an expression of like $(A \times B)$, if the arity of A and B are not one, using the Cartesian product operator results in a non-flat set. The translator must compute the arity of A and B in the translation stage, and extract the inner components before applying the Cartesian product operator. 
 \end{itemize}
 
 An alternative method to represent Cartesian products exploits the fact that in TLA+, a tuple is treated the same as a list. Using this fact, a macro for Cartesian products that treats tuples as lists, is used in place of the Alloy Cartesian product operator.
