@@ -9,7 +9,7 @@ sig A {
 
 The field f is an element of $A \times B \times C$. In Alloy, Cartesian products are flat; $(A \times B) \times C$ is the same as $A \times (B \times C)$, which is also the same as $A \times B \times C$. In TLA+, Cartesian products are nested; $(A \times B) \times C$, $A \times (B \times C)$ and $A \times B \times C$ are distinct from each other, where $A \times B \times C$ corresponds to the flat product.
 
-A simple implementation of a translation for Cartesian products is to use $A \times B \times C$ in TLA+, by avoiding the use of brackets in the produced TLA+ code. However, this results in the following issues:
+A simple implementation of a translation of Alloy's Cartesian product operator $(\rightarrow)$ is to use $A \times B \times C$ in TLA+. Since $A \times B \times C$ does not specify associativity, the result of the expression is a flat Cartesian product. However, this results in the following issues:
 
 \begin{itemize}
 	\item When translating an expression like $P \times (B \times C + A \times D)$, eliminating the brackets requires the translator to remake the whole expression by applying the distribution rule to get $P \times B \times C + P \times A \times D$. When predicates are introduced, this approach becomes intractable.
