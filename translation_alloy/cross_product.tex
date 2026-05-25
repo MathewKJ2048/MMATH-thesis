@@ -13,7 +13,7 @@ A simple implementation of a translation of Alloy's Cartesian product operator $
 
 \begin{itemize}
 	\item When translating an expression like $P \times (B \times C + A \times D)$, eliminating the brackets requires the translator to remake the whole expression by applying the distribution rule to get $P \times B \times C + P \times A \times D$. When predicates are introduced, this approach becomes intractable.
-	\item When translating an expression such as $(A \times B)$, if the arity of A and B are not one, using the Cartesian product operator results in a non-flat set. The translator must compute the arity of A and B in the translation stage, and extract the inner components before applying the Cartesian product operator. 
+	\item When translating an expression such as $(A \times B)$, if the arity of A and B are not one, using the Cartesian product operator results in a non-flat set. The translator would have to compute the arity of A and B in the translation stage, and extract the inner components before applying the Cartesian product operator. 
 \end{itemize}
 
 An alternative method to represent Cartesian products exploits the fact that in TLA+, a tuple is treated the same as a list. Using this fact, a macro for Cartesian products that treats tuples as lists, is used in place of the Alloy Cartesian product operator.
