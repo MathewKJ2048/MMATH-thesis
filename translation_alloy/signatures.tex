@@ -1,3 +1,5 @@
+\section{Signature representation}
+
 Signatures are represented by sets of string atoms, with each top-level signature being assigned a specific string prefix. For the given model, sigs A and C are top-level sigs, while B is a descendant of A in the sig hierarchy.
 
 \begin{lstlisting}
@@ -9,8 +11,12 @@ sig C
 This is translated as:
 
 \begin{lstlisting}
-A \in SUBSET {"A0","A1",A2"}
-/\ B \in A
-/\ C \in {"C0","C1",C2"}
+A \in SUBSET A_atoms
+/\ B \in SUBSET A
+/\ C \in SUBSET C_atoms
+\end{lstlisting}
+
+\begin{lstlisting}
+	
 \end{lstlisting}
 

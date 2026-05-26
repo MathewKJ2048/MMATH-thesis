@@ -9,5 +9,4 @@ Consider an Alloy model M, with a command C, of the form run/check P for scope s
 
 The goal of a translation to TLA+ is that when the translated model is run using TLC, the output produced by TLC can be used to infer the output the Analyzer would have produced, had the original model been run on the Analyzer. A translation scheme needs to map from the output of TLC to the output of the Analyzer.
 
-
 A translation is correct, if and only if the Analyzer's outputs correspond to the outputs produced by TLC. A translation is efficient, if the time taken to run a translated model using TLC is lower than the time taken to run the original model using the Analyzer.

@@ -1,3 +1,5 @@
+\section{Translation Schemes}
+
 Consider the following generic Alloy model M:
 
 
@@ -38,6 +40,8 @@ The core of the model M is translated as follows:
 	Next == UNCHANGED <<A,f>>
 
 \end{lstlisting}
+
+A check command in Alloy can be turned into an equivalent run command by negating the body of the command. $check p for s$ is equivalent to $run ~p for s$. Going forward, the command is assumed to be a run command.
 
 \begin{itemize}
 	\item Every signature and field becomes a variable
