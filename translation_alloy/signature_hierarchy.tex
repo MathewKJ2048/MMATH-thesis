@@ -1,0 +1,36 @@
+\section{Signature Hierarchy}
+
+
+An Alloy model consists of a collection of signatures, which can be divided into two types:
+
+\begin{enumerate}
+	\item top-level sigs - these sigs do not depend on any other sigs in the model
+	\item non-top-level sigs - these sigs are related to other sigs
+\end{enumerate}
+
+Every Alloy model must consist of at least one top-level sig. Non-top-level sigs may or may not be present.
+
+Sigs are related to each other in two ways:
+
+\begin{enumerate}
+	\item IN relations: $sig B in A$ means that every atom of B is an atom of A. A is an IN-parent of B, and B is an IN-parent of A. A sig may have any number (including zero) of IN-children and IN-parents.
+	\item EXTENDS relations: $sig B extends A$ means that every atom of B is an atom of A, and no atom of B can be an atom of any other EXTENDS-child of A. A is an EXTENDS-parent of B, and B is an EXTENDS-parent of A. A sig may have any number (including zero) of EXTENDS-children, but no more than one EXTENDS-parent.
+\end{enumerate}
+
+In mathematical terms, let $SIGS$ be the set of all sigs, $IN(B,A)$ mean than sig B is an IN-child of sig A, and $EXTENDS(B,A)$ mean that sig B is an EXTENDS-child of sig A.
+
+
+$\forall A,B \in SIGS: IN(B,A) \Leftrightarrow B \subseteq A $
+
+$\forall A,B \in SIGS: EXTENDS(B,A) \rightarrow B \subseteq A$
+
+$\forall A,B \in SIGS: EXTENDS(B,A) \rightarrow \forall C \in SIGS: EXTENDS(C,A) \rightarrow C = B \lor C \cap B = \emptyset $
+
+$\forall A,B \in SIGS: EXTENDS(B,A) \rightarrow \forall D \in SIGS : \lnot EXTENDS(B,D) $
+
+
+
+
+
+
+
