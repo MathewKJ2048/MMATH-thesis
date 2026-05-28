@@ -1,0 +1,8 @@
+
+\section{Evaluation metrics}
+
+The translator is evaluated on three criteria: correctness, performance of the model, and performance of the translator.
+
+The translator produces a tla+ file from a .dsh file, which can be analyzed statically for complexity metrics, such as the number of lines of code. This can be compared to the number of lines required for a manual translation for specific models, to observe how efficient the translator is at capturing the semantics of the model.
+
+Through the analysis of simple models, certain optimization techniques are revealed and implemented, in an iterative process. However, a weakness of such a system is over-fitting to certain kinds of models, whereby optimizing for small, hand-written models may have undesirable effects on the efficiency of other types of models.
