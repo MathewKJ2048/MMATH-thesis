@@ -10,12 +10,12 @@ When a TLA+ spec is written and run on TLC, there are certain rules that the for
 
 \end{lstlisting}
 
-$MC(V)$ must specify a finite set of values that V can take, without references to V'. $MC(V)$ can take three basic forms:
+$MC(V)$ is a membership constraint of V. It specifies a finite set of values that V can take, without references to V'. $MC(V)$ can take three basic forms:
 
 \begin{itemize}
 	\item $V = E$
 	\item $V \in E$
-	\item $MCA(V) \\/ MCB(V)$
+	\item $MCA(V) \lor MCB(V)$
 \end{itemize}
 
 where E is an arbitrary expression, and MCA and MCB follow the same rules as MC.
@@ -24,9 +24,9 @@ $MC_prime(V',V)$ is subject to similar rules, taking four basic forms:
 
 \begin{itemize}
 	\item $V' = E(V)$
-	\item $V' \\ in E(V)$
+	\item $V' \in E(V)$
 	\item $UNCHANGED V$
-	\item $MCA\_prime(V',V) \\/ MCB\_prime(V',V)$
+	\item $MCA\_prime(V',V) \lor MCB\_prime(V',V)$
 \end{itemize}
 
 where $E(V)$ is an expression which may depend on $V$, and $MCA_prime$ and $MCB_prime$ follow the same rules as $MC_prime$. $UNCHANGED V$ is equivalent to $V' = V$, which is a special case of the first form.
@@ -34,3 +34,12 @@ where $E(V)$ is an expression which may depend on $V$, and $MCA_prime$ and $MCB_
 $LC(V)$ is an expression that depends only on the unprimed $V$ (with no reference to $V'$), while $LC'(V,V')$ is an expression that can depend on both $V$ or $V'$ or both.
 
 Any translation scheme must produce an output .tla file that satisfies these rules, before TLC can be used.
+
+
+For TLA+ models with multiple variables $V_1$ to $V_n$, the following rules hold:
+
+\begin{enumerate}
+	\item $LC_i(V_i)$ must appear only after $MC_i(V_i)$, for every variable $V_i$. 
+	\item $MC_i(V_i)$ can make a reference to $V_j$ in the body, iff $MC_j(V_j)$ appears before $MC_i(V_i)$, for any pair of variables $V_i$ and $V_j$.
+	\item Analogous rules hold for the primed forms of the variables.
+\end{enumerate}
