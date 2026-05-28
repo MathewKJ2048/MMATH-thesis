@@ -1,1 +1,33 @@
 \section{Translating Dot Products in Alloy}
+
+In Alloy, there are two join operators - the dot join ($a \cdot b$) and the box join ($a[b]$). The two operators produce the same result; the difference between them is in the precedence of operation. Since precedence is captured by the Alloy AST, the translator need not distinguish between the two operators, and can translate them both the same way.
+
+If $a$ is a relation of arity $m$ and $b$ is a relation of arity $n$, then the arity of the relation $a cdot b$ is $m+n-2$. In general, $a cdot b = {(a_1,a_2...a_(m-1),b_2,b_3...b_n) : (a_1,a_2...a_(m)) \in a, (b_1,b_2...b_(n)) \in b, a_m = b_1 }$. In other terms, the dot join of two relations is the set of tuples obtained by:
+
+\begin{enumerate}
+	\item generating every pair of tuples where the first is an element of $a$, the second is an element of $b$ and the last element of the first tuple is equal to the first element of the second tuple and
+	\item for each such pair of tuples, removing the last element of the first tuple and the first element of the second tuple, and joining what's left to create a third tuple and
+	\item creating a set of all such joined tuples.
+\end{enumerate}
+
+
+In the special case where $m = 1$ and $n = 1$, $a cdot b = \phi$  (NOTE: is this true?)
+
+
+This is translated to TLA+ using the following macros:
+
+
+\begin{lstlisting}
+
+	\* this macro determines if a pair of tuples belong in the dot join
+	_inner_product_filter(a,b) == a[Len(a)] = b[1]
+
+	\* this macro creates the third tuple from the first two tuples
+	_inner_product_map(a,b) == SubSeq(a,1,Len(a) - 1) \o SubSeq(_e2,2,Len(_e2))
+	
+	\* this macro computes the dot join by generating all pairs of tuples, filtering and joining
+	_inner_product(a,b) == {_inner_product_map(a,b) : <<a,b>> \in {<<x,y>> \in _R1 \X _R2 : _inner_product_filter(x,y)}}
+\end{lstlisting}
+
+When generating all possible pairs of tuples, the inbuilt Cartesian product in TLA+ is used. When joining the tuples, the individual tuples are retrieved from the Cartesian product element before the join is applied, thus preserving the flatness of the relation in the final result.
+
