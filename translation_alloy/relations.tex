@@ -1,0 +1,22 @@
+\section{Translating Relations in Alloy}
+
+
+\begin{enumerate}
+	\item Sig are treated as relations of arity 1. The representation of a general relation is an extension to arity n, with the type being the same in TLA+
+	\item Each relation is associated with a VARIABLE, just like a sig
+	\item Relations are defined by their product type, and constraints. 
+	\item The product type is used for the membership constraints on the VARIABLE
+	\item The implicit constraints emerge from quantifiers used in the field declaration
+	\item All fields are treated as global, the translator does not support the declaration of multiple fields with the same name
+	\item There are two types of fields: ones which do not refer to any other field, and ones which do
+	\item Define Head(f) as the sig inside which the field is declared, and Tail(f) as the list of sigs and fields within the decl
+	\item The goal of the computation of the product type is to define a function Type(f) which is a list of sigs, such that when their cross product is taken, we get the product type.
+	\item When computing product types, all implicit constraints are ignored
+	\item Algorithm for translation: in the base case, where Tail(f) has no sigs, Type(f) is Head(f)::Tail(f)
+	\item In the case where Tail(f) starts with a field g, Type(f) is Type(g)++fold(map(Tail(Tail(f), Type),++)
+	\item In the case where Tail(f) starts with a sig S, Type(f) is S::fold(map(Tail(f), Type),++)
+	\item In cases where the decl elements are set expressions, There is an ambiguity in what happens if Head(f) involves a field
+	\item The above are restricted to cases where f and g live in the same sig and share a Head. If the Heads are different, the rules change
+\end{enumerate}
+
+

@@ -1,0 +1,27 @@
+
+
+\section{Tree-shaking}
+
+
+\subsection{Syntactic Tree shaking}
+
+\begin{enumerate}
+	\item This describes optimizations applied to the automated TLA+ code to remove any unused TLA+ code
+	\item There are two main sources of unused code: Unused boilerplate macros for operations like transitive closure
+	\item Unused macros involving user imports, which are all defined and translated, but never used in Init
+	\item Both these classes of code are removed via post-processing on the TLA+ code
+	\item The expected increase is a small improvement in the time taken by the SANY parser check, as well as optimizations in the Z3 translation output from Apalache
+	\item These optimizations, if turned off, have no effect on the output of the translated code
+\end{enumerate}
+
+\subsection{Semantic Tree shaking}
+
+\begin{enumerate}
+	\item These optimizations involve the removal of unused elements from the base Alloy model
+	\item This requires knowledge about the underlying Alloy model being translated, and is not solely an operation done on TLA+
+	\item Since Apalache and TLC do not understand Alloy or the mappings between the Alloy code and the translator output, these optimizations can be performed only by the translator itself
+	\item Unused fields and sigs are removed entirely from the TLA+ model, by purging the associated variables and by removing the clauses that use these variables in the memebrship constraints on Init, and by modifying Next to avoid referring to these variables
+	\item This may uncover possible further syntactic tree-shaking, so this is performed first. Syntactic tree-shaking cannot reveal further semantic tree-shaking, so the processes are not cycled till the code converges into a fixpoint.
+	\item The application of this optimization changes the output produced by the translated model, by eliminating references to certain variables
+\end{enumerate}
+
