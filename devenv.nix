@@ -8,7 +8,10 @@
   packages = [ pkgs.git ];
 
   # https://devenv.sh/languages/
-  languages.texlive.enable = true;
+  languages.texlive = {
+    enable = true;
+    packages = ["algorithms" "glossaries" "glossaries-extra"];
+  };
 
   # https://devenv.sh/processes/
   # processes.dev.exec = "${lib.getExe pkgs.watchexec} -n -- ls -la";
