@@ -1,0 +1,111 @@
+% tla.tex --- TLA+ language definition for listings -*-latex-*-
+
+% Copyright (C) 2018 Nancy Day <nday@uwaterloo.ca>
+% Copyright (C) 2018, 2020 Amin Bandali <bandali@uwaterloo.ca>
+
+
+
+
+\usepackage[formats]{listings}
+% Define Language
+\lstdefinelanguage{tla}{
+  % list of keywords
+  morekeywords={
+    EXTENDS,
+    CONSTANT,
+    CONSTANTS,
+    VARIABLE,
+    VARIABLES,
+    ASSUME,
+    INSTANCE,
+    WITH,
+    THEOREM,
+    LOCAL,
+    TRUE,
+    FALSE,
+    BOOLEAN,
+    CHOOSE,
+    SUBSET,
+    UNION,
+    DOMAIN,
+    EXCEPT,
+    STRING,
+    IF,
+    THEN,
+    ELSE,
+    CASE,
+    OTHER,
+    LET,
+    IN,
+    ENABLED,
+    UNCHANGED,
+    MODULE,
+    %SF_,
+    %WF_,
+    % new keywords in TLA+2
+    ACTION,
+    ASSUMPTION,
+    AXIOM,
+    BY,
+    COROLLARY,
+    DEF,
+    DEFINE,
+    DEFS,
+    HAVE,
+    HIDE,
+    LAMBDA,
+    LEMMA,
+    NEW,
+    OBVIOUS,
+    OMITTED,
+    ONLY,
+    PICK,
+    PROOF,
+    PROPOSITION,
+    PROVE,
+    QED,
+    RECURSIVE,
+    STATE,
+    SUFFICES,
+    TAKE,
+    TEMPORAL,
+    USE,
+    WITNESS
+  },
+  sensitive=true, % keywords are case-sensitive
+  morecomment=[l]{\\*}, % l is for line comment
+  morecomment=[s]{(*}{*)}, % s is for start and end delimiter
+  morestring=[b]" % defines that strings are enclosed in double quotes
+}
+
+\lstdefineformat{tla}{~={\raise.17ex\hbox{$\scriptstyle\sim$}}}
+% Set Language
+\lstdefinestyle{tla}{
+  language={tla},
+  basicstyle=\footnotesize\ttfamily, % Global Code Style
+  captionpos=b, % Position of the Caption (t for top, b for bottom)
+  extendedchars=true, % Allows 256 instead of 128 ASCII characters
+  format=tla,
+  tabsize=2, % number of spaces indented when discovering a tab 
+  columns=flexible, % make all characters equal width
+  keepspaces=true, % does not ignore spaces to fit width, convert tabs to spaces
+  showstringspaces=false, % lets spaces in strings appear as real spaces
+  breaklines=true, % wrap lines if they don't fit
+  %frame=trbl, % draw a frame at the top, right, left and bottom of the listing
+  %frameround=tttt, % make the frame round at all four corners
+  framesep=4pt, % quarter circle size of the round corners
+  numbers=left, % show line numbers at the left
+  numberstyle=\footnotesize\ttfamily, % style of the line numbers
+  commentstyle=\color{eclipseGreen}, % style of comments
+  keywordstyle=\bfseries\color{ctla}, % style of keywords
+  stringstyle=\color{eclipseBlue}, % style of strings
+  xleftmargin=0.8cm,
+  escapeinside={\%*}{*)}          % if you want to add LaTeX within your code
+}
+
+\newcommand{\tlacode}[1]{\lstinline[style=tla, breakatwhitespace, basicstyle=\ttfamily]{#1}}
+
+
+%% Local Variables:
+%% tex-main-file: "../bandali-mmath-thesis.tex"
+%% End:
